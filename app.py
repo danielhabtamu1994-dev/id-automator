@@ -32,24 +32,31 @@ if uploaded_file is not None:
         else:
             with st.spinner("ሲስተሙ እያነበበ እና እየቆረጠ ነው..."):
                 try:
-                    # --- ክፍል 1፡ ፊት ፈልጎ መቁረጥ ---
-                    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-                    gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
-                    faces = face_cascade.detectMultiScale(gray, 1.1, 5, minSize=(30, 30))
+                                    # --- ክፍል 1፡ ሙሉ ጉርድ ፎቶውን መቁረጥ (Fixed Frame Crop) ---
+                with col1:
+                    st.subheader("📷 የተቆረጠው ጉርድ ፎቶ")
                     
-                    with col1:
-                        st.subheader("📷 የተቆረጠው ፎቶ")
-                        if len(faces) > 0:
-                            (x, y, w, h) = faces[0]
-                            # ፎቶው ትንሽ ሰፋ እንዲል (Padding)
-                            cropped_face = image_cv[max(0, y-20):y+h+20, max(0, x-20):x+w+20]
-                            cropped_face_rgb = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
-                            st.image(cropped_face_rgb, width=150)
-                            
-                            is_success, buffer = cv2.imencode(".png", cropped_face)
-                            st.download_button("ፎቶውን አውርድ", data=buffer.tobytes(), file_name="face.png", mime="image/png")
-                        else:
-                            st.warning("ምስሉ ላይ ፊት ሊገኝ አልቻለም።")
+                    height, width = image_cv.shape[:2]
+                    
+                    # ምስሉ ሁልጊዜ ተመሳሳይ ከሆነ፣ ማዕቀፉን (Frame) መፈለግ ይሻላል
+                    # እዚህ ጋር እንደ ምሳሌ ምስሉ ካለበት ቦታ ዙሪያውን ቆርጠናል
+                    # ልኬቱን (Coordinates) እንደ አስፈላጊነቱ ማስተካከል ትችላለህ
+                    
+                    # ለምሳሌ ከላይ 10%፣ ከታች 10%፣ ከግራና ቀኝ 10% ትተን መቁረጥ
+                    start_row, start_col = int(height * 0.05), int(width * 0.12)
+                    end_row, end_col = int(height * 0.95), int(width * 0.88)
+                    
+                    cropped_img = image_cv[start_row:end_row, start_col:end_col]
+                    
+                    if cropped_img.size > 0:
+                        cropped_rgb = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB)
+                        st.image(cropped_rgb, caption="የወጣው ሙሉ ፎቶ", width=200)
+                        
+                        is_success, buffer = cv2.imencode(".png", cropped_img)
+                        st.download_button("ፎቶውን አውርድ", data=buffer.tobytes(), file_name="full_photo.png", mime="image/png")
+                    else:
+                        st.warning("ፎቶውን መቁረጥ አልተቻለም።")
+
                     
                     # --- ክፍል 2፡ ጽሁፍ ማውጣት (OCR) ---
                     with col2:

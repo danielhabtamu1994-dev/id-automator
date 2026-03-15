@@ -34,29 +34,31 @@ if uploaded_file is not None:
         else:
             with st.spinner("ሲስተሙ ፎቶውን እየቆረጠ እና ጽሁፉን እያነበበ ነው..."):
                 try:
-                    # --- 1. ፎቶውን ከላይ በግራ በኩል መቁረጥ (Top-Left Crop) ---
-                    height, width = image_cv.shape[:2]
-                    
-                    # ፎቶው ያለበትን ሳጥን መለካት (በላክኸው ምስል መሠረት)
-                    # ከላይ 0 ጀምሮ እስከ 45% ቁመት፣ ከግራ 0 ጀምሮ እስከ 48% ስፋት
-                    crop_h = int(height * 0.45)
-                    crop_w = int(width * 0.48)
-                    
-                    cropped_img = image_cv[0:crop_h, 0:crop_w]
-                    
-                    # --- 2. ጽሁፍ ማውጣት (Amharic + English OCR) ---
-                    # ምስሉን ለ OCR ማዘጋጀት (ወደ ግራጫ መቀየር)
-                    gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
-                    
-                    # ጽሁፉን ለማንበብ amh+eng እንጠቀማለን
-                    extracted_text = pytesseract.image_to_string(gray, lang='amh+eng')
+                    # --- 1. ፎቶውን ለይቶ መቁረጥ (Face-based Smart Crop) ---
+                    gray_img = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
+                    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+                    faces = face_cascade.detectMultiScale(gray_img, 1.1, 5)
 
                     st.markdown("---")
                     res_col1, res_col2 = st.columns(2)
 
                     with res_col1:
                         st.subheader("📷 የወጣው ጉርድ ፎቶ")
-                        if cropped_img.size > 0:
+                        if len(faces) > 0:
+                            # የመጀመሪያውን ፊት መውሰድ
+                            (x, y, w, h) = faces[0]
+                            
+                            # ፊቱ ላይ ሰፋ ያለ ክፍተት (Padding) መጨመር (ሙሉ ጉርዱ እንዲወጣ)
+                            height, width = image_cv.shape[:2]
+                            offset_y = int(h * 0.8) # ወደ ላይ እና ወደ ታች 80% ጨምር
+                            offset_x = int(w * 0.6) # ወደ ጎን 60% ጨምር
+                            
+                            y1 = max(0, y - offset_y)
+                            y2 = min(height, y + h + int(offset_y/2))
+                            x1 = max(0, x - offset_x)
+                            x2 = min(width, x + w + offset_x)
+                            
+                            cropped_img = image_cv[y1:y2, x1:x2]
                             cropped_rgb = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB)
                             st.image(cropped_rgb, width=250)
                             
@@ -69,10 +71,14 @@ if uploaded_file is not None:
                                 mime="image/png"
                             )
                         else:
-                            st.warning("ፎቶውን መቁረጥ አልተቻለም።")
+                            st.warning("ምስሉ ላይ ፊት ሊገኝ አልቻለም።")
 
+                    # --- 2. ጽሁፍ ማውጣት (Amharic + English OCR) ---
                     with res_col2:
                         st.subheader("📝 የወጣው ጽሁፍ")
+                        # ጽሁፉን ለማንበብ amh+eng እንጠቀማለን
+                        extracted_text = pytesseract.image_to_string(gray_img, lang='amh+eng')
+
                         if extracted_text.strip():
                             st.text_area("የተገኘ መረጃ፦", extracted_text, height=350)
                             

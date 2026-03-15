@@ -39,9 +39,18 @@ if uploaded_file is not None:
         else:
             with st.spinner("ሲስተሙ መረጃዎችን እያወጣ ነው..."):
                 try:
-                    # --- 1. ሙሉ ጉርድ ፎቶውን መቁረጥ (Frame Cropping) ---
-                    # ምስሉ ሁልጊዜ ተመሳሳይ ስለሆነ በልኬት መቁረጥ ይሻላል
+                                        # --- 1. ሙሉ ጉርድ ፎቶውን መቁረጥ (Top-Left Frame) ---
                     height, width = image_cv.shape[:2]
+                    
+                    # ፎቶው በግራ በኩል ከላይ ካለ (እንደ ላክኸው ምስል)
+                    # ቁመቱ ከጠቅላላው 45% እና ስፋቱ ከጠቅላላው 48% አካባቢ ነው ፎቶው
+                    start_row = 0
+                    end_row = int(height * 0.45)   # ከላይ ጀምሮ እስከ 45% ቁመት
+                    start_col = 0
+                    end_col = int(width * 0.48)    # ከግራ ጀምሮ እስከ 48% ስፋት
+                    
+                    cropped_img = image_cv[start_row:end_row, start_col:end_col]
+
                     
                     # ፎቶው ያለበትን ቦታ መለካት (እነዚህን ቁጥሮች እንደ አስፈላጊነቱ ያሻሽሉ)
                     start_row = int(height * 0.08) # ከላይ 8% ተው

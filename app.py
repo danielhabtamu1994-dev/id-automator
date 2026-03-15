@@ -33,7 +33,7 @@ if uploaded_file is not None:
                 
                 # ሞዴሉን ወደ gemini-1.5-pro ቀይረነዋል (ይህ ብዙ ጊዜ 404 አይሰጥም)
                 model = genai.GenerativeModel(
-                    model_name='gemini-1.5-pro',
+                    model_name='gemini-1.0-pro',
                     safety_settings=safety_settings
                 )
                 

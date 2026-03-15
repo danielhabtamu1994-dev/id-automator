@@ -3,38 +3,36 @@ import pytesseract
 from PIL import Image
 import pandas as pd
 
-st.set_page_config(page_title="Amharic OCR", layout="centered")
+st.set_page_config(page_title="Multi-Language OCR", layout="centered")
 
-st.title("🪪 የአማርኛ መታወቂያ አንባቢ (ያለ AI)")
-st.write("ይህ ሲስተም የአማርኛ ፊደላትን ለይቶ ያነባል።")
+st.title("🪪 አማርኛ እና እንግሊዝኛ አንባቢ")
+st.write("መታወቂያው ላይ ያለውን የአማርኛ እና የእንግሊዝኛ ጽሁፍ በአንድ ላይ ያወጣል።")
 
-uploaded_file = st.file_uploader("የመታወቂያውን ምስል ይጫኑ...", type=['png', 'jpg', 'jpeg'])
+uploaded_file = st.file_uploader("የመታወቂያ ምስል ይጫኑ...", type=['png', 'jpg', 'jpeg'])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="የተጫነው ምስል", use_container_width=True)
     
-    if st.button("አማርኛውን አንብብ (Extract Amharic)"):
-        with st.spinner("አማርኛውን እያነበብኩ ነው... እባክዎ ይጠብቁ"):
+    if st.button("ሁሉንም ጽሁፍ አውጣ"):
+        with st.spinner("በመፈለግ ላይ..."):
             try:
-                # ቋንቋውን ወደ አማርኛ (amh) ቀይረነዋል
-                # አማርኛ እና እንግሊዝኛ እንዲቀላቀል ከፈለክ lang='amh+eng' ማድረግ ትችላለህ
-                text = pytesseract.image_to_string(image, lang='amh')
+                # እዚህ ጋር ነው ለውጡ፡ amh+eng ተቀናጅተዋል
+                text = pytesseract.image_to_string(image, lang='amh+eng')
                 
                 if text.strip():
-                    st.success("ተሳክቷል!")
-                    st.text_area("የወጣው የአማርኛ ጽሁፍ፦", text, height=250)
+                    st.success("ተጠናቀቀ!")
+                    st.text_area("የወጣው መረጃ፦", text, height=250)
                     
-                    # መረጃውን ወደ ሰንጠረዥ መቀየር
+                    # ወደ ሰንጠረዥ መቀየር
                     lines = [line.strip() for line in text.split('\n') if line.strip()]
-                    df = pd.DataFrame(lines, columns=["የተገኘ መረጃ"])
+                    df = pd.DataFrame(lines, columns=["ዝርዝር መረጃ"])
                     st.dataframe(df, use_container_width=True)
                     
-                    csv = df.to_csv(index=False).encode('utf-8-sig') # ለአማርኛ utf-8-sig ይሻላል
-                    st.download_button("በ Excel (CSV) አውርድ", data=csv, file_name="amharic_data.csv")
+                    csv = df.to_csv(index=False).encode('utf-8-sig')
+                    st.download_button("Excel አውርድ", data=csv, file_name="extracted_data.csv")
                 else:
-                    st.warning("ምንም የአማርኛ ጽሁፍ ሊገኝ አልቻለም።")
+                    st.warning("ምንም ጽሁፍ አልተገኘም።")
             
             except Exception as e:
-                st.error(f"ስህተት፦ {e}")
-                st.info("ምክር፦ 'packages.txt' ላይ 'tesseract-ocr-amh' መጨመሩን ያረጋግጡ።")
+                st.error(f"ስህተት፡ {e}")
